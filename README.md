@@ -2,13 +2,27 @@
 
 Detect and prevent suspicious Terraform policy bypass attempts before Azure changes occur.
 
-## Example synopsis
+## Problem statement
 
 A canonical Terraform plan request is gated for tenant, approved target, evidence freshness, and secretless execution before policy evaluation and Sentinel alert adapters process risky changes.
 
-## Real-world scenario
+A production implementation can still fail even when every resource deploys successfully. The material risk is either missed signal or over-automation: an event is ignored, duplicated, or converted into a disruptive action without enough context. The design therefore treats Terraform, Azure Policy, GitHub Actions, and the surrounding identity and evidence controls as one reviewable system rather than unrelated configuration tasks.
+
+## Example case study
+
+### Situation
 
 An infrastructure team fears that a rushed override could disable policy or expose a critical resource. The guard blocks suspicious plans before apply and makes attempted bypasses visible to the SOC rather than leaving them only in CI logs.
+
+### Response
+
+A rushed change attempts to disable protective policy through a Terraform override. The gate rejects the plan before apply and sends Sentinel sanitized repository, actor, and control context without exposing plan secrets.
+
+The team first exercises the repository's synthetic approved and denied fixtures. An approved request must produce the same idempotent plan on replay; a stale, unscoped, public, or unapproved request must fail before an Azure adapter is allowed to run.
+
+### Expected outcome
+
+Stakeholders receive a decision package they can attach to a change record: requested scope, controls evaluated, the reason for approval or denial, and the explicit handoff to live integration. The example supports design review and incident rehearsal without pretending that a local test changed Azure.
 
 ## Architecture
 
@@ -23,14 +37,11 @@ project action before producing a deterministic execution plan. Azure adapters
 consume that plan; they are deliberately outside the local simulator so local
 tests cannot claim a live cloud change occurred.
 
-```mermaid
-flowchart LR
-  Request[Desired-state request] --> Validate[Fail-closed validation]
-  Validate -->|denied| Evidence[Sanitized denial evidence]
-  Validate -->|approved| Plan[Idempotent project plan]
-  Plan --> Adapter[Azure adapter integration gate]
-  Adapter --> Monitor[Private evidence and monitoring plane]
-```
+![Icon-based architecture for Terraform-Enterprise-Sentinel-Guard](docs/architecture.svg)
+
+The upper boundary names the principal services and technologies used by this repository. The lower boundary shows the implemented control flow: desired state is validated, provider action remains an explicit integration gate, and sanitized evidence is retained for review and deterministic replay.
+
+Azure product icons come from [Microsoft's official Azure Architecture Icons](https://learn.microsoft.com/azure/architecture/icons/). Open-source marks are sourced from [Simple Icons](https://simpleicons.org/) when shown; each mark identifies its respective technology.
 
 ## Quickstart
 
@@ -58,11 +69,11 @@ Local validation covers 13 tests, deterministic replay, JSON parsing, Python
 compilation, ignore hygiene, and Bicep compilation when a compiler is present.
 It does **not** prove Azure deployment, service licensing, quota, data-plane
 permissions, provider/API availability, cloud failover, load, cost, or teardown.
-See [[`docs/test-matrix.md`](docs/test-matrix.md)](docs/test-matrix.md) and [[`docs/runbook.md`](docs/runbook.md)](docs/runbook.md) before any integration trial.
+See [`docs/test-matrix.md`](docs/test-matrix.md) and [`docs/runbook.md`](docs/runbook.md) before any integration trial.
 
 ## Community
 
-See [[`CONTRIBUTING.md`](CONTRIBUTING.md)](CONTRIBUTING.md), [[`SECURITY.md`](SECURITY.md)](SECURITY.md), [[`SUPPORT.md`](SUPPORT.md)](SUPPORT.md), and [[`LICENSE`](LICENSE)](LICENSE). The reference
+See [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md), [`SUPPORT.md`](SUPPORT.md), and [`LICENSE`](LICENSE). The reference
 is intentionally conservative and uses synthetic identifiers only.
 
 ## Repository guide
