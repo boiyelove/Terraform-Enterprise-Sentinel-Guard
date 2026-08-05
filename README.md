@@ -2,6 +2,19 @@
 
 Detect and prevent suspicious Terraform policy bypass attempts before Azure changes occur.
 
+## Project metadata
+
+The metadata below is derived from tracked source, manifests, and infrastructure
+files. It describes what this repository includes; live-service integration remains
+bounded by the documented deployment and validation limitations.
+
+| Category | Included |
+| --- | --- |
+| Platforms | Microsoft Azure; GitHub Actions |
+| Services and stack | Terraform; Azure Policy; GitHub Actions; Sentinel; Logic Apps |
+| Languages and formats | Python; Bicep; Bicep parameters; Bash; JSON; YAML |
+| Delivery and IaC | Bicep + `.bicepparam`; GitHub Actions CI; YAML configuration; Python validation/tests |
+
 ## Problem statement
 
 A canonical Terraform plan request is gated for tenant, approved target, evidence freshness, and secretless execution before policy evaluation and Sentinel alert adapters process risky changes.
